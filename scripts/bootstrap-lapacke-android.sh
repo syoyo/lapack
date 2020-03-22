@@ -1,11 +1,11 @@
 #!/bin/bash
 
-buildir=`pwd`/build-android
+builddir=`pwd`/build-android
 
 ## Please edit android sdk/ndk/cmake path
 ANDROID_SDK_ROOT=$HOME/Android/Sdk/
 #ANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk-bundle
-ANDROID_NDK_ROOT=$HOME/Android/Sdk/ndk/android-ndk-r21/
+ANDROID_NDK_ROOT=/home/syoyo/Android/Sdk/ndk/21.0.6113669/
 # CMake 3.10 or later required
 CMAKE_BIN=$ANDROID_SDK_ROOT/cmake/3.10.2.4988404/bin/cmake
 #CMAKE_BIN=cmake

@@ -1,12 +1,12 @@
 message(STATUS "LAPACKE enable")
-enable_language(C)
 
 option(LAPACKE_STANDALONE_BUILD "Build liblapacke only" ON)
 
 if (LAPACKE_STANDALONE_BUILD)
   cmake_minimum_required(VERSION 2.8.12)
-  project(lapacke)
+  project(lapacke C)
 else (LAPACKE_STANDALONE_BUILD)
+  enable_language(C)
   set(LAPACK_INSTALL_EXPORT_NAME lapacke-targets)
   
   # Create a header file lapacke_mangling.h for the routines called in my C programs
