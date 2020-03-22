@@ -1,22 +1,30 @@
 message(STATUS "LAPACKE enable")
 enable_language(C)
 
-set(LAPACK_INSTALL_EXPORT_NAME lapacke-targets)
+option(LAPACKE_STANDALONE_BUILD "Build liblapacke only" ON)
 
-# Create a header file lapacke_mangling.h for the routines called in my C programs
-include(FortranCInterface)
-## Ensure that the fortran compiler and c compiler specified are compatible
-FortranCInterface_VERIFY()
-FortranCInterface_HEADER(${LAPACK_BINARY_DIR}/include/lapacke_mangling.h
-  MACRO_NAMESPACE "LAPACK_"
-  SYMBOL_NAMESPACE "LAPACK_")
-if(NOT FortranCInterface_GLOBAL_FOUND OR NOT FortranCInterface_MODULE_FOUND)
-  message(WARNING "Reverting to pre-defined include/lapacke_mangling.h")
-  configure_file(include/lapacke_mangling_with_flags.h.in
-                 ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h)
-endif()
+if (LAPACKE_STANDALONE_BUILD)
+  cmake_minimum_required(VERSION 2.8.12)
+  project(lapacke)
+else (LAPACKE_STANDALONE_BUILD)
+  set(LAPACK_INSTALL_EXPORT_NAME lapacke-targets)
+  
+  # Create a header file lapacke_mangling.h for the routines called in my C programs
+  include(FortranCInterface)
+  ## Ensure that the fortran compiler and c compiler specified are compatible
+  FortranCInterface_VERIFY()
+  FortranCInterface_HEADER(${LAPACK_BINARY_DIR}/include/lapacke_mangling.h
+    MACRO_NAMESPACE "LAPACK_"
+    SYMBOL_NAMESPACE "LAPACK_")
+  if(NOT FortranCInterface_GLOBAL_FOUND OR NOT FortranCInterface_MODULE_FOUND)
+    message(WARNING "Reverting to pre-defined include/lapacke_mangling.h")
+    configure_file(include/lapacke_mangling_with_flags.h.in
+                   ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h)
+  endif()
+  
+  include_directories(include ${LAPACK_BINARY_DIR}/include)
+endif (LAPACKE_STANDALONE_BUILD)
 
-include_directories(include ${LAPACK_BINARY_DIR}/include)
 add_subdirectory(include)
 add_subdirectory(src)
 add_subdirectory(utils)
@@ -93,40 +101,43 @@ if(LAPACKE_WITH_TMG)
 endif()
 target_link_libraries(lapacke PRIVATE ${LAPACK_LIBRARIES})
 
-lapack_install_library(lapacke)
-install(
-  FILES ${LAPACKE_INCLUDE} ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  COMPONENT Development
-  )
+if (NOT LAPACKE_STANDALONE_BUILD)
+  lapack_install_library(lapacke)
+  install(
+    FILES ${LAPACKE_INCLUDE} ${LAPACK_BINARY_DIR}/include/lapacke_mangling.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    COMPONENT Development
+    )
+endif (NOT LAPACKE_STANDALONE_BUILD)
 
 if(BUILD_TESTING)
   add_subdirectory(example)
 endif()
 
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lapacke.pc.in ${CMAKE_CURRENT_BINARY_DIR}/lapacke.pc @ONLY)
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/lapacke.pc
-  DESTINATION ${PKG_CONFIG_DIR}
-  COMPONENT Development
-  )
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-version.cmake.in
-  ${LAPACK_BINARY_DIR}/lapacke-config-version.cmake @ONLY)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-build.cmake.in
-  ${LAPACK_BINARY_DIR}/lapacke-config.cmake @ONLY)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-install.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/lapacke-config.cmake @ONLY)
-install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/lapacke-config.cmake
-  ${LAPACK_BINARY_DIR}/lapacke-config-version.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/lapacke-${LAPACK_VERSION}
-  COMPONENT Development
-  )
-
-install(EXPORT lapacke-targets
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/lapacke-${LAPACK_VERSION}
-  COMPONENT Development
-  )
+if (NOT LAPACKE_STANDALONE_BUILD)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lapacke.pc.in ${CMAKE_CURRENT_BINARY_DIR}/lapacke.pc @ONLY)
+  install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/lapacke.pc
+    DESTINATION ${PKG_CONFIG_DIR}
+    COMPONENT Development
+    )
+  
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-version.cmake.in
+    ${LAPACK_BINARY_DIR}/lapacke-config-version.cmake @ONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-build.cmake.in
+    ${LAPACK_BINARY_DIR}/lapacke-config.cmake @ONLY)
+  
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/lapacke-config-install.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/lapacke-config.cmake @ONLY)
+  install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/lapacke-config.cmake
+    ${LAPACK_BINARY_DIR}/lapacke-config-version.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/lapacke-${LAPACK_VERSION}
+    COMPONENT Development
+    )
+  
+  install(EXPORT lapacke-targets
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/lapacke-${LAPACK_VERSION}
+    COMPONENT Development
+    )
+endif (NOT LAPACKE_STANDALONE_BUILD)
